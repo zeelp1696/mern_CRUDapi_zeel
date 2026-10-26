@@ -39,7 +39,13 @@ function App() {
       });
       const newPost = await response.json();
 
-      setPosts([newPost, ...posts]);
+      // JSONPlaceholder returns id: 101 for every POST request.
+      // We ensure each new post has a unique ID (101, 102, 103...)
+      // so deleting one post does not delete all other posts sharing ID 101!
+      const maxId = posts.reduce((max, p) => (p.id > max ? p.id : max), 100);
+      const uniquePost = { ...newPost, id: maxId + 1 };
+
+      setPosts([uniquePost, ...posts]);
       setTitle("");
       setBody("");
     } catch (error) {
@@ -156,7 +162,7 @@ function App() {
 
         {posts.map((post) => (
           <div key={post.id} className="post-item">
-            <h4>{post.title}</h4>
+            <h4>#{post.id} - {post.title}</h4>
             <p>{post.body}</p>
             <div className="item-actions">
               <button onClick={() => startEdit(post)} className="btn btn-secondary">
