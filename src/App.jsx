@@ -65,14 +65,24 @@ function App() {
     if (!title || !body) return;
 
     try {
-      const response = await fetch(`${API_URL}/${editingId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id: editingId, title, body, userId: 1 }),
-      });
-      const updatedPost = await response.json();
+      let updatedPost = { id: editingId, title, body, userId: 1 };
+
+      // JSONPlaceholder only has posts 1-100 saved in its mock database.
+      // Newly created posts have ID >= 101, which causes JSONPlaceholder to return 500.
+      // So we call the API for existing posts (id <= 100), and update local state for all.
+      if (editingId <= 100) {
+        const response = await fetch(`${API_URL}/${editingId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedPost),
+        });
+
+        if (response.ok) {
+          updatedPost = await response.json();
+        }
+      }
 
       setPosts(posts.map((p) => (p.id === editingId ? updatedPost : p)));
       setEditingId(null);
